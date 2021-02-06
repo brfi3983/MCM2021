@@ -7,10 +7,11 @@ from nltk.corpus import stopwords
 from nltk.tokenize import MWETokenizer
 tokenizer = MWETokenizer()
 
+# plt.style.use('bmh')
 plt.style.use('ggplot')
 nltk.download('punkt')
 nltk.download('stopwords')
-class_dist = 1
+class_dist = 0
 
 # ========================================================
 def word_process(df, column):
@@ -83,7 +84,7 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 	plt.suptitle('Frequency of Common Words', fontsize=16)
 	plt.legend()
 
-	plt.savefig(f'./figures/{category}.png')
+	plt.savefig(f'./figures/{category}.svg')
 # ========================================================
 def main():
 
@@ -92,11 +93,11 @@ def main():
 	classes = ['Positive ID', 'Negative ID', 'Unverified', 'Unprocessed']
 	colors = [['orange', 'teal', 'tab:pink', 'tab:brown'], ['red', 'blue', 'tab:purple', 'brown']]
 
-	print(df.head(2).to_latex(index=False))
+	# print(df.head(2).to_latex(index=False))
 	# text_file = open("LatexTable.txt", "w")
-	# text_file.write(df.head(2).to_latex(index=False))
+	# text_file.write(df.head(8).to_latex(index=False))
 	# text_file.close()
-	exit()
+	# exit()
 	# Separate into different Classes
 	df_positive = df.loc[df['Lab Status'] == classes[0]]
 	df_negative = df.loc[df['Lab Status'] == classes[1]]
@@ -104,7 +105,7 @@ def main():
 	df_unprocessed = df.loc[df['Lab Status'] == classes[3]]
 
 	print(len(df_positive), len(df_negative), len(df_unverified), len(df_unprocessed))
-	exit()
+	# exit()
 	# Show Class Distribution
 	if class_dist == 1:
 		plt.figure(figsize=(16,9))
@@ -113,7 +114,7 @@ def main():
 		plt.title('Class Distribution')
 		plt.xlabel('Class')
 		plt.ylabel('Count')
-		plt.savefig('./figures/class_dist.png')
+		# plt.savefig('./figures/class_dist.svg')
 		plt.show()
 		exit()
 
@@ -128,7 +129,7 @@ def main():
 	words_neg_lab = word_process(df_negative, 'Lab Comments')
 	words_unver_lab = word_process(df_unverified, 'Lab Comments')
 
-	n = 15
+	n = 50
 	# Count frequency of word occurrences
 	# USER COMMENTS
 	word_pos, count_pos = word_occurrences(words_pos, n)
