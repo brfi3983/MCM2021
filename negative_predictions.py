@@ -18,20 +18,7 @@ def word_process(df, column):
 	stopword_arr = nltk.corpus.stopwords.words('english')
 
 	# Tokenize datafram column
-	# tokens = df[column].apply(str).apply(nltk.word_tokenize)
 	tokens = df[column].apply(str).apply(nltk.word_tokenize)
-	# print(tokens)
-	# exit()
-	# tokens1 = []
-	# # print(tokens)
-	# for n, t in enumerate(tokens):
-	# 	if t != []:
-	# 		print(t)
-	# 		tokens1.append(tokenizer.tokenize(t))
-	# 	if n == 50:
-	# 		print(tokens1)
-	# 		exit()
-	# exit()
 
 	# Iterate through words and remove stopwords, punctuation, and save as a lower case word
 	words = []
@@ -92,18 +79,20 @@ def main():
 	classes = ['Positive ID', 'Negative ID', 'Unverified', 'Unprocessed']
 	colors = [['orange', 'teal', 'tab:pink', 'tab:brown'], ['red', 'blue', 'tab:purple', 'brown']]
 
-	print(df.head(2).to_latex(index=False))
-	# text_file = open("LatexTable.txt", "w")
-	# text_file.write(df.head(2).to_latex(index=False))
-	# text_file.close()
-	exit()
 	# Separate into different Classes
-	df_positive = df.loc[df['Lab Status'] == classes[0]]
-	df_negative = df.loc[df['Lab Status'] == classes[1]]
-	df_unverified = df.loc[df['Lab Status'] == classes[2]]
-	df_unprocessed = df.loc[df['Lab Status'] == classes[3]]
+	# df_positive = df.loc[df['Lab Status'] == classes[0]]
+	# df_negative = df.loc[df['Lab Status'] == classes[1]]
+	# df_unverified = df.loc[df['Lab Status'] == classes[2]]
+	# df_unprocessed = df.loc[df['Lab Status'] == classes[3]]
 
-	print(len(df_positive), len(df_negative), len(df_unverified), len(df_unprocessed))
+	df_lab = df['Lab Comments'].str.lower()
+	df_digger = df_lab[df_lab.str.contains('digger', na=False)]
+	df_horntail = df_lab[df_lab.str.contains('horntail', na=False)]
+	df_sawfly = df_lab[df_lab.str.contains('sawfly', na=False)]
+	df_cicada = df_lab[df_lab.str.contains('cicada', na=False)]
+	# df_digger = df_lab[df_lab.str.contains('digger', na=False)]
+	print(len(df_digger), len(df_horntail), len(df_sawfly), len(df_cicada))
+	# print(len(df_positive), len(df_negative), len(df_unverified), len(df_unprocessed))
 	exit()
 	# Show Class Distribution
 	if class_dist == 1:
@@ -122,37 +111,6 @@ def main():
 	words_pos = word_process(df_positive, 'Notes')
 	words_neg = word_process(df_negative, 'Notes')
 	words_unver = word_process(df_unverified, 'Notes')
-
-	# LAB COMMENTS
-	words_pos_lab = word_process(df_positive, 'Lab Comments')
-	words_neg_lab = word_process(df_negative, 'Lab Comments')
-	words_unver_lab = word_process(df_unverified, 'Lab Comments')
-
-	n = 15
-	# Count frequency of word occurrences
-	# USER COMMENTS
-	word_pos, count_pos = word_occurrences(words_pos, n)
-	word_neg, count_neg = word_occurrences(words_neg, n)
-	word_unver, count_unver = word_occurrences(words_unver, n)
-
-	# LAB COMMENTS
-	word_pos_lab, count_pos_lab = word_occurrences(words_pos_lab, n)
-	word_neg_lab, count_neg_lab = word_occurrences(words_neg_lab, n)
-	word_unver_lab, count_unver_lab = word_occurrences(words_unver_lab, n)
-
-	# Store in an iterable fashion
-	data_words = np.array([[word_pos, word_neg, word_unver], [word_pos_lab, word_neg_lab, word_unver_lab]])
-	data_count = np.array([[count_pos, count_neg, count_unver], [count_pos_lab, count_neg_lab, count_unver_lab]])
-
-	# Graphing each Category as a subplot (1,2) -> (user, lab)
-	for i in range(data_words.shape[1]):
-		w1, w2 = data_words[:, i]
-		c1, c2 = data_count[:, i]
-
-		# Graph a single subplot
-		graph_words(w1, c1, w2, c2, classes[i], colors[0][i], colors[1][i])
-
-	plt.show()
 
 # ========================================================
 if __name__ == "__main__":
