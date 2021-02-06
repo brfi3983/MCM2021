@@ -1,7 +1,13 @@
 2021MCM_ProblemC__Images_by_GlobalID.xlsx
 2021MCMProblemC_DataSet.xlsx
 2021MCMProblemC_DataSet.csv
+<<<<<<< HEAD
 /data
 /gif
 LatexTable.txt
 2021MCM_ProblemC_Files.rar
+=======
+./data
+2021MCM_ProblemC_Files.rar
+data/2021_MCM_Problem_C_Data/
+>>>>>>> 6f8ff3024dd26d1fbaa2377e77e2b5325c1498a8
