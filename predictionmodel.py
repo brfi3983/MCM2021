@@ -13,7 +13,7 @@ plt.style.use('ggplot')
 nltk.download('punkt')
 nltk.download('stopwords')
 class_dist = 0
-nltk_f = 0
+nltk_f = 1
 # ========================================================
 def word_process(df, column):
 
@@ -47,7 +47,7 @@ def word_process(df, column):
 	else:
 		df[column] = df[column].fillna('')
 		# print(df[column])
-		vectorizer = CountVectorizer(stop_words='english', ngram_range=(2,2))
+		vectorizer = CountVectorizer(stop_words='english', ngram_range=(1,1))
 		words = vectorizer.fit_transform(df[column])
 		# print(vectorizer.get_feature_names())
 		# exit()
@@ -67,13 +67,17 @@ def word_occurrences(words, vectorizer, n):
 		for tup  in freq:
 			word.append(tup[0])
 			count.append(tup[1])
+		print(word, count)
+		exit()
 		return [word, count]
 	else:
 		count = words.sum(axis=0)
-		word = vectorizer.get_feature_names()
-		print(count)
-		exit()
-	return [word[:n], count[:n]]
+		# word = vectorizer.get_feature_names()
+		# print(word, count)
+	    # words_freq = [(word, count[0, idx]) for word, idx in     vectorizer.vocabulary_.items()]
+    	# words_freq =sorted(words_freq, key = lambda x: x[1], reverse=True)
+		# exit()
+	return [words_freq[:n], count[:n]]
 
 # ========================================================
 def graph_words(word1, count1, word2, count2, category, color1, color2):
