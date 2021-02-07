@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 from nltk.tokenize import MWETokenizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 tokenizer = MWETokenizer()
 
 # plt.style.use('bmh')
@@ -12,52 +13,67 @@ plt.style.use('ggplot')
 nltk.download('punkt')
 nltk.download('stopwords')
 class_dist = 0
-
+nltk_f = 0
 # ========================================================
 def word_process(df, column):
-	# Import stopwords
-	stopword_arr = nltk.corpus.stopwords.words('english')
 
-	# Tokenize datafram column
-	# tokens = df[column].apply(str).apply(nltk.word_tokenize)
-	tokens = df[column].apply(str).apply(nltk.word_tokenize)
-	# print(tokens)
-	# exit()
-	# tokens1 = []
-	# # print(tokens)
-	# for n, t in enumerate(tokens):
-	# 	if t != []:
-	# 		print(t)
-	# 		tokens1.append(tokenizer.tokenize(t))
-	# 	if n == 50:
-	# 		print(tokens1)
-	# 		exit()
-	# exit()
+	if nltk_f == 1:
+		# Import stopwords
+		stopword_arr = nltk.corpus.stopwords.words('english')
 
-	# Iterate through words and remove stopwords, punctuation, and save as a lower case word
-	words = []
-	for sent in tokens:
-		for word in sent:
-			if word.lower() not in stopword_arr and word.lower().isalpha():
-				words.append(word.lower())
+		# Tokenize datafram column
+		# tokens = df[column].apply(str).apply(nltk.word_tokenize)
+		# print(df[column].apply(str))
+		tokens = df[column].apply(str).apply(nltk.word_tokenize)
+		# exit()
+		# tokens1 = []
+		# # print(tokens)
+		# for n, t in enumerate(tokens):
+		# 	if t != []:
+		# 		print(t)
+		# 		tokens1.append(tokenizer.tokenize(t))
+		# 	if n == 50:
+		# 		print(tokens1)
+		# 		exit()
+		# exit()
 
-	return words
+		# Iterate through words and remove stopwords, punctuation, and save as a lower case word
+		words = []
+		for sent in tokens:
+			for word in sent:
+				if word.lower() not in stopword_arr and word.lower().isalpha():
+					words.append(word.lower())
+		return words, 0
+	else:
+		df[column] = df[column].fillna('')
+		# print(df[column])
+		vectorizer = CountVectorizer(stop_words='english', ngram_range=(2,2))
+		words = vectorizer.fit_transform(df[column])
+		# print(vectorizer.get_feature_names())
+		# exit()
+		return words, vectorizer
 
 # ========================================================
-def word_occurrences(words, n):
+def word_occurrences(words, vectorizer, n):
 
-	# Find frequency distribution of top "n" words
-	d = FreqDist(words)
-	freq = d.most_common(n)
+	if nltk_f == 1:
+		# Find frequency distribution of top "n" words
+		d = FreqDist(words)
+		freq = d.most_common(n)
 
-	# Save the word and its count to two arrays (returned as a list)
-	word = []
-	count = []
-	for tup  in freq:
-		word.append(tup[0])
-		count.append(tup[1])
-
-	return [word, count]
+		# Save the word and its count to two arrays (returned as a list)
+		word = []
+		count = []
+		for tup  in freq:
+			word.append(tup[0])
+			count.append(tup[1])
+		return [word, count]
+	else:
+		count = words.sum(axis=0)
+		word = vectorizer.get_feature_names()
+		print(count)
+		exit()
+	return [word[:n], count[:n]]
 
 # ========================================================
 def graph_words(word1, count1, word2, count2, category, color1, color2):
@@ -120,28 +136,32 @@ def main():
 
 	# Extract the words (removing punctuation and stopwords)
 	# USER COMMENTS
-	words_pos = word_process(df_positive, 'Notes')
-	words_neg = word_process(df_negative, 'Notes')
-	words_unver = word_process(df_unverified, 'Notes')
+	words_pos, vec_pos = word_process(df_positive, 'Notes')
+	words_neg, vec_neg = word_process(df_negative, 'Notes')
+	words_unver, vec_unver = word_process(df_unverified, 'Notes')
 
 	# LAB COMMENTS
-	words_pos_lab = word_process(df_positive, 'Lab Comments')
-	words_neg_lab = word_process(df_negative, 'Lab Comments')
-	words_unver_lab = word_process(df_unverified, 'Lab Comments')
+	words_pos_lab, vec_pos_lab = word_process(df_positive, 'Lab Comments')
+	words_neg_lab, vec_neg_lab = word_process(df_negative, 'Lab Comments')
+	words_unver_lab, vec_unver_lab = word_process(df_unverified, 'Lab Comments')
 
-	n = 50
+	n = 15
 	# Count frequency of word occurrences
 	# USER COMMENTS
-	word_pos, count_pos = word_occurrences(words_pos, n)
-	word_neg, count_neg = word_occurrences(words_neg, n)
-	word_unver, count_unver = word_occurrences(words_unver, n)
+	word_pos, count_pos = word_occurrences(words_pos, vec_pos, n)
+	word_neg, count_neg = word_occurrences(words_neg, vec_neg, n)
+	word_unver, count_unver = word_occurrences(words_unver, vec_unver, n)
 
 	# LAB COMMENTS
-	word_pos_lab, count_pos_lab = word_occurrences(words_pos_lab, n)
-	word_neg_lab, count_neg_lab = word_occurrences(words_neg_lab, n)
-	word_unver_lab, count_unver_lab = word_occurrences(words_unver_lab, n)
+	word_pos_lab, count_pos_lab = word_occurrences(words_pos_lab, vec_pos_lab, n)
+	word_neg_lab, count_neg_lab = word_occurrences(words_neg_lab, vec_neg_lab, n)
+	word_unver_lab, count_unver_lab = word_occurrences(words_unver_lab, vec_unver_lab, n)
 
 	# Store in an iterable fashion
+	print(len(word_pos_lab), len(count_pos))
+	print(len(word_neg_lab), len(count_neg))
+	# print(len(word_pos_lab), len(word_pos))
+	# exit()
 	data_words = np.array([[word_pos, word_neg, word_unver], [word_pos_lab, word_neg_lab, word_unver_lab]])
 	data_count = np.array([[count_pos, count_neg, count_unver], [count_pos_lab, count_neg_lab, count_unver_lab]])
 
