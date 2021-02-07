@@ -14,11 +14,14 @@ from sklearn.pipeline import Pipeline
 from sklearn import metrics
 from sklearn.metrics import accuracy_score
 from sklearn.feature_extraction import text
-
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from imblearn.over_sampling import SMOTE, SVMSMOTE
+from sklearn.naive_bayes import GaussianNB
 from collections import Counter
 from matplotlib import pyplot
 from sklearn.preprocessing import LabelEncoder
+
+from sklearn.tree import DecisionTreeClassifier
 
 tokenizer = MWETokenizer()
 
@@ -86,6 +89,14 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 	plt.legend()
 
 	plt.savefig(f'./figures/{category}.png')
+def graph_class_dist(y_train, y_test):
+	plt.title('Test vs. Training Distribution')
+	plt.hist(y_train, color='teal', label='Train')
+	plt.hist(y_test, color='red', label='Train')
+	plt.xlabel('Class')
+	plt.xticks([0, 1, 2, 3], ['Golden Digger Wasps', 'Horntail', 'Sawfly', 'Cicada Killers'], rotation=30)
+	plt.ylabel('Count')
+	plt.legend()
 # ========================================================
 def main():
 
@@ -121,14 +132,19 @@ def main():
 	df_wasp['Lab Comments'] = df_wasp['Lab Comments'].apply(lambda s: 4)
 
 	# Concatonate all data together
-	data = np.array(pd.concat([df_digger, df_horntail, df_sawfly, df_cicada]))
+	data_c = pd.concat([df_digger, df_horntail, df_sawfly, df_cicada])
+	text_file = open("LatexTable.txt", "w")
+	text_file.write(data_c.head(8).to_latex(index=False))
+	text_file.close()
+	exit()
+	data = np.array(data_c)
 	# Split into X and y (for y you need to set it as an integer array to avoid errors)
 	X, y = data[:, 0], data[:, 1]
 	y = y.astype('int32')
 	vectorizer = TfidfVectorizer()
 	X = vectorizer.fit_transform(X)
-	print(X.shape)
-	exit()
+	# print(X.shape)
+	# exit()
 	# Split into train and test set after looking at distribution
 	print(f'Digger: {len(df_digger)} Horntail: {len(df_horntail)} Sawfly: {len(df_sawfly)} Cicada: {len(df_cicada)}, Wasp: {len(df_wasp)}')
 
@@ -138,19 +154,18 @@ def main():
 	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
 	X_train, y_train = oversample.fit_resample(X_train, y_train)
 
-	plt.hist(y_train, color='teal')
-	plt.hist(y_test, color='red')
 
 	plt.show()
 	# exit()
 	# Classifier pipeline (Tokenize -> Frequency of Words -> Linear SVM)
 	text_clf = Pipeline([
 	# ('vect', TfidfVectorizer(stop_words = 'english')),
-	# ('tfidf', TfidfTransformer()),
-	# ('clf', MultinomialNB(alpha=1e-2)),
-	('clf', SGDClassifier(loss='log', penalty='l1',
-	alpha=0.0005, random_state=42, verbose=True,
-	max_iter=5, tol=None)),
+	# ('cnt', CountVectorizer(stop_words = 'english')),
+	('clf', MultinomialNB(alpha=1e-2)),
+	# ('clf', SGDClassifier(loss='hinge', penalty='l1',
+	# alpha=0.0005, random_state=42, verbose=True,
+	# max_iter=5, tol=None)),
+	# ('clf', DecisionTreeClassifier(max_depth=2)),
 	])
 
 	# Train the classifier and then predict on test set
