@@ -6,12 +6,20 @@ from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 from nltk.tokenize import MWETokenizer
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import SGDClassifier
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.pipeline import Pipeline
 from sklearn import metrics
+from sklearn.metrics import accuracy_score
+from sklearn.feature_extraction import text
+
+from imblearn.over_sampling import SMOTE, SVMSMOTE
+from collections import Counter
+from matplotlib import pyplot
+from sklearn.preprocessing import LabelEncoder
+
 tokenizer = MWETokenizer()
 
 plt.style.use('ggplot')
@@ -91,7 +99,6 @@ def main():
 	df_lab = df_negative[['Notes', 'Lab Comments']] #MAKE SURE ONLY NEGATIVE!!!!!
 	df_lab = df_lab.applymap(lambda s:s.lower() if type(s) == str else s)
 
-
 	# ============== Counting how man people resubmitted (or at least more than once) ==============
 	# df_lat = df[['Latitude', 'Longitude']]
 	# df_count = np.array(df_lat.pivot_table(index=['Latitude', 'Longitude'], aggfunc='size'))
@@ -115,32 +122,46 @@ def main():
 
 	# Concatonate all data together
 	data = np.array(pd.concat([df_digger, df_horntail, df_sawfly, df_cicada]))
-
 	# Split into X and y (for y you need to set it as an integer array to avoid errors)
 	X, y = data[:, 0], data[:, 1]
 	y = y.astype('int32')
-
+	vectorizer = TfidfVectorizer()
+	X = vectorizer.fit_transform(X)
+	print(X.shape)
+	exit()
 	# Split into train and test set after looking at distribution
 	print(f'Digger: {len(df_digger)} Horntail: {len(df_horntail)} Sawfly: {len(df_sawfly)} Cicada: {len(df_cicada)}, Wasp: {len(df_wasp)}')
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42, shuffle=True)
 
+	# label encode the target variable
+	# y = LabelEncoder().fit_transform(y)
+	oversample = SMOTE()
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.10, random_state=42)
+	X_train, y_train = oversample.fit_resample(X_train, y_train)
+
+	plt.hist(y_train, color='teal')
+	plt.hist(y_test, color='red')
+
+	plt.show()
+	# exit()
 	# Classifier pipeline (Tokenize -> Frequency of Words -> Linear SVM)
 	text_clf = Pipeline([
-	('vect', CountVectorizer(stop_words='english')),
+	# ('vect', TfidfVectorizer(stop_words = 'english')),
 	# ('tfidf', TfidfTransformer()),
-	# ('clf', MultinomialNB()),
-	('clf', SGDClassifier(loss='hinge', penalty='l2',
-	alpha=1e-7, random_state=42,
-	max_iter=10, tol=None)),
+	# ('clf', MultinomialNB(alpha=1e-2)),
+	('clf', SGDClassifier(loss='log', penalty='l1',
+	alpha=0.0005, random_state=42, verbose=True,
+	max_iter=5, tol=None)),
 	])
 
 	# Train the classifier and then predict on test set
 	text_clf = text_clf.fit(X_train, y_train)
-	y_pred = text_clf.predict(X_test)
 
+	y_acc = text_clf.score(X_train, y_train)
+	y_pred = text_clf.predict(X_test)
 	# Performance Metrics
 	print(metrics.classification_report(y_test, y_pred))
 	print(metrics.confusion_matrix(y_test, y_pred))
+	print(y_acc)
 	# print(f'Total number of negative cases: {len(df[df['Lab Status'] == 'Negative ID'])}')
 	# print(len(df_positive), len(df_negative), len(df_unverified), len(df_unprocessed))
 
