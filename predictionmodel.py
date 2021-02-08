@@ -6,6 +6,7 @@ from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 from nltk.tokenize import MWETokenizer
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_extraction import text
 tokenizer = MWETokenizer()
 
 # plt.style.use('bmh')
@@ -13,7 +14,7 @@ plt.style.use('ggplot')
 nltk.download('punkt')
 nltk.download('stopwords')
 class_dist = 0
-nltk_f = 1
+nltk_f = 0
 # ========================================================
 def word_process(df, column):
 
@@ -21,21 +22,7 @@ def word_process(df, column):
 		# Import stopwords
 		stopword_arr = nltk.corpus.stopwords.words('english')
 
-		# Tokenize datafram column
-		# tokens = df[column].apply(str).apply(nltk.word_tokenize)
-		# print(df[column].apply(str))
 		tokens = df[column].apply(str).apply(nltk.word_tokenize)
-		# exit()
-		# tokens1 = []
-		# # print(tokens)
-		# for n, t in enumerate(tokens):
-		# 	if t != []:
-		# 		print(t)
-		# 		tokens1.append(tokenizer.tokenize(t))
-		# 	if n == 50:
-		# 		print(tokens1)
-		# 		exit()
-		# exit()
 
 		# Iterate through words and remove stopwords, punctuation, and save as a lower case word
 		words = []
@@ -46,11 +33,11 @@ def word_process(df, column):
 		return words, 0
 	else:
 		df[column] = df[column].fillna('')
-		# print(df[column])
-		vectorizer = CountVectorizer(stop_words='english', ngram_range=(1,1))
+		sw_list = ['thanks','submission']
+		stopwords = text.ENGLISH_STOP_WORDS.union(sw_list)
+		vectorizer = CountVectorizer(stop_words=stopwords, ngram_range=(2,2))
 		words = vectorizer.fit_transform(df[column])
-		# print(vectorizer.get_feature_names())
-		# exit()
+
 		return words, vectorizer
 
 # ========================================================
@@ -67,17 +54,23 @@ def word_occurrences(words, vectorizer, n):
 		for tup  in freq:
 			word.append(tup[0])
 			count.append(tup[1])
-		print(word, count)
 		exit()
 		return [word, count]
 	else:
 		count = words.sum(axis=0)
-		# word = vectorizer.get_feature_names()
-		# print(word, count)
-	    # words_freq = [(word, count[0, idx]) for word, idx in     vectorizer.vocabulary_.items()]
-    	# words_freq =sorted(words_freq, key = lambda x: x[1], reverse=True)
-		# exit()
-	return [words_freq[:n], count[:n]]
+
+		words_freq = [(word, count[0, idx]) for word, idx in vectorizer.vocabulary_.items()]
+		words_freq = sorted(words_freq, key=lambda x: x[1], reverse=True)
+
+		word_q = []
+		count_q = []
+		for i,tup in enumerate(words_freq):
+			if i == n:
+				break
+			word_q.append(tup[0])
+			count_q.append(tup[1])
+
+	return [word_q, count_q]
 
 # ========================================================
 def graph_words(word1, count1, word2, count2, category, color1, color2):
@@ -104,7 +97,7 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 	plt.suptitle('Frequency of Common Words', fontsize=16)
 	plt.legend()
 
-	plt.savefig(f'./figures/{category}.svg')
+	plt.savefig(f'./figures/{category}.pdf')
 # ========================================================
 def main():
 
