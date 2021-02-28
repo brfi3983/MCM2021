@@ -35,7 +35,7 @@ def word_process(df, column):
 		df[column] = df[column].fillna('')
 		sw_list = ['thanks','submission']
 		stopwords = text.ENGLISH_STOP_WORDS.union(sw_list)
-		vectorizer = CountVectorizer(stop_words=stopwords, ngram_range=(2,2))
+		vectorizer = CountVectorizer(stop_words=stopwords, ngram_range=(1,1))
 		words = vectorizer.fit_transform(df[column])
 
 		return words, vectorizer
@@ -78,7 +78,7 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 	fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16,9))
 	# USER
 	axis = np.arange(len(word1))
-	ax1.bar(axis, count1, align='center', color = color1, alpha=0.8)
+	ax1.bar(axis, count1, align='center', color = color2, alpha=0.8)
 	ax1.set_xticks(axis)
 	ax1.set_xticklabels(word1, rotation = 40, ha='right')
 	ax1.set_xlabel('Word')
@@ -87,7 +87,7 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 
 	# LAB
 	axis = np.arange(len(word2))
-	ax2.bar(axis, count2, align='center', color = color2, alpha=0.8)
+	ax2.bar(axis, count2, align='center', color = color1, alpha=0.8)
 	ax2.set_xticks(axis)
 	ax2.set_xticklabels(word2, rotation = 40, ha='right')
 	ax2.set_xlabel('Word')
@@ -97,14 +97,14 @@ def graph_words(word1, count1, word2, count2, category, color1, color2):
 	plt.suptitle('Frequency of Common Words', fontsize=16)
 	plt.legend()
 
-	plt.savefig(f'./figures/{category}.pdf')
+	plt.savefig(f'./figures/{category}.png')
 # ========================================================
 def main():
 
 	# Import Main Data
 	df = pd.read_csv('2021MCMProblemC_DataSet.csv')
 	classes = ['Positive ID', 'Negative ID', 'Unverified', 'Unprocessed']
-	colors = [['orange', 'teal', 'tab:pink', 'tab:brown'], ['red', 'blue', 'tab:purple', 'brown']]
+	colors = [['tab:red', 'tab:orange', 'tab:purple', 'tab:blue'], ['red', 'orange', 'purple', 'blue']]
 
 	# print(df.head(2).to_latex(index=False))
 	# text_file = open("LatexTable.txt", "w")
@@ -127,7 +127,7 @@ def main():
 		plt.title('Class Distribution')
 		plt.xlabel('Class')
 		plt.ylabel('Count')
-		# plt.savefig('./figures/class_dist.svg')
+		plt.savefig('./figures/class_dist.png')
 		plt.show()
 		exit()
 
@@ -142,7 +142,7 @@ def main():
 	words_neg_lab, vec_neg_lab = word_process(df_negative, 'Lab Comments')
 	words_unver_lab, vec_unver_lab = word_process(df_unverified, 'Lab Comments')
 
-	n = 15
+	n = 10
 	# Count frequency of word occurrences
 	# USER COMMENTS
 	word_pos, count_pos = word_occurrences(words_pos, vec_pos, n)

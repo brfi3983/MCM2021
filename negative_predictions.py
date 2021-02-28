@@ -20,6 +20,7 @@ from sklearn.naive_bayes import GaussianNB
 from collections import Counter
 from matplotlib import pyplot
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import GridSearchCV
 
 from sklearn.tree import DecisionTreeClassifier
 
@@ -133,10 +134,10 @@ def main():
 
 	# Concatonate all data together
 	data_c = pd.concat([df_digger, df_horntail, df_sawfly, df_cicada])
-	text_file = open("LatexTable.txt", "w")
-	text_file.write(data_c.head(8).to_latex(index=False))
-	text_file.close()
-	exit()
+	# text_file = open("LatexTable.txt", "w")
+	# text_file.write(data_c.head(8).to_latex(index=False))
+	# text_file.close()
+	# exit()
 	data = np.array(data_c)
 	# Split into X and y (for y you need to set it as an integer array to avoid errors)
 	X, y = data[:, 0], data[:, 1]
@@ -158,16 +159,28 @@ def main():
 	plt.show()
 	# exit()
 	# Classifier pipeline (Tokenize -> Frequency of Words -> Linear SVM)
-	text_clf = Pipeline([
-	# ('vect', TfidfVectorizer(stop_words = 'english')),
-	# ('cnt', CountVectorizer(stop_words = 'english')),
-	('clf', MultinomialNB(alpha=1e-2)),
-	# ('clf', SGDClassifier(loss='hinge', penalty='l1',
-	# alpha=0.0005, random_state=42, verbose=True,
-	# max_iter=5, tol=None)),
-	# ('clf', DecisionTreeClassifier(max_depth=2)),
-	])
+# defining parameter range
+	param_grid = {'alpha': [0.00001, 0.0001, 0.001, 0.01, 0.1]}
 
+	grid = GridSearchCV(MultinomialNB(), param_grid, refit = True, verbose = 3)
+
+	# fitting the model for grid search
+	grid.fit(X_train, y_train)
+	# text_clf = Pipeline([
+	# # ('vect', TfidfVectorizer(stop_words = 'english')),
+	# # ('cnt', CountVectorizer(stop_words = 'english')),
+	# ('clf', MultinomialNB(alpha=1e-2)),
+	# # ('clf', SGDClassifier(loss='hinge', penalty='l1',
+	# # alpha=0.0005, random_state=42, verbose=True,
+	# # max_iter=5, tol=None)),
+	# # ('clf', DecisionTreeClassifier(max_depth=2)),
+	# ])
+	print(grid.best_params_)
+
+	grid_predictions = grid.predict(X_test)
+	# print classification report
+	print(metrics.classification_report(y_test, grid_predictions))
+	exit()
 	# Train the classifier and then predict on test set
 	text_clf = text_clf.fit(X_train, y_train)
 
